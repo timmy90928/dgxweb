@@ -1,0 +1,29 @@
+{% extends "common/base.html" %} {% block title %}{{ title }}{% endblock %} {%
+block head %} {{ super() }} {% endblock %} {% block top %} {% endblock %} {%
+block body %}
+<div class="header-section">
+  <div>{{ left | safe if left else  ''}}</div>
+  <h3>{{ title }}</h3>
+  <div>{{ right | safe if right else ''}}</div>
+</div>
+<div class="container">
+  <table>
+    <thead>
+      <tr>
+        {% for head in heads %}
+        <th>{{ head }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for data_list in datas %}
+      <tr>
+        {% for data in data_list %}
+        <td>{{ data|safe }}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %} {% block bottom %} {% endblock %}

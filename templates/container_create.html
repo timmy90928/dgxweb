@@ -1,0 +1,36 @@
+{% extends "common/base.html" %} 
+{% block title %}建立Container{% endblock %} 
+{%block head %} {{ super() }} {% endblock %} 
+
+{% block top %} {% endblock %} 
+
+
+{%block body %} 
+<div class="header-section">
+    <div></div>
+    <h3>建立Container</h3>
+    <div></div>
+</div>
+<div class="container">
+
+    <!-- <form action="/account/edit/{{ current_user.id }}" method="post" enctype="multipart/form-data" class="needs-validation" novalidate> -->
+    <form action="/container/create" method="post">
+        <label for="image" class="form-label">請選擇Image</label>
+        <input type="text" id="image" name="image" list="imagelist" class="form-control" aria-describedby="ImageHelpBlock" required>
+        <div id="ImageHelpBlock" class="form-text">
+           可參考 http://ngc.nvidia.com/catalog/containers
+        </div>
+        {{ lib.datalist("imagelist", images, 0) }}
+        <div class="button-group">
+            <div>
+                <input type='submit' value='創建' class="blue-button">
+                <input type='reset'  value='重設' class="red-button">
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %} 
+
+
+
+{% block bottom %} {% endblock %} 

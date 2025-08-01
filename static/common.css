@@ -1,0 +1,273 @@
+* {
+    box-sizing: border-box;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    
+}
+
+html {
+    scroll-behavior: smooth;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+/* header */
+header {
+    position: fixed; /* 固定在頁面最上面 */
+    top: 0; /* 垂直置頂 */
+
+    
+}
+header div, header a {
+    color: white;
+    text-align: center;
+    text-decoration: none; /*取消底線*/
+}
+
+header h2 {
+    margin: 0;
+    text-align: center;
+    font-size: 22px;
+}
+@media (max-width: 769px) {
+    header h2  {
+        font-size: 16px;
+    }
+}
+
+/* footer */
+footer {
+    width: 100%;
+    background-color: #333;
+    color: white;
+    text-align: center;
+    font-size: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0px;
+}
+
+footer label {
+    padding: 5px 0px;
+}
+
+/* body */
+body {
+    width: 100%;
+    
+    background-color: #e9ecef;
+    margin: 0;
+    padding: 0;
+    overflow: auto ; /* 啟用滾動功能 */
+}
+
+.container-fluid {
+    display: flex;
+    justify-content: space-between;
+}
+.body_content {
+    margin-top: 30px;
+}
+/* container */
+.container {
+    max-width: 100%;
+    padding: 10px 10px;
+    margin: 0;
+    /* justify-content: center; */
+}
+
+/* table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+th, td {
+    padding: 12px 15px;
+    /* text-align: left; */
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+    min-width: 100px;
+}
+th {
+    background-color: #024991;
+    color: white;
+}
+/* tr:nth-child(even) {
+    background-color: #f8f8f8;
+} */
+tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* header-section */
+.header-section {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    padding: 0 20px 10px 20px;
+}
+.header-section h3 {
+    font-size: 30px;
+    font-weight: bold;
+    color: #024991;
+    margin: 0;
+    text-align: center;
+}
+
+/* button */
+.blue-button, .red-button {
+    font-family: '標楷體', Arial, sans-serif;
+    padding: 10px 15px;
+    margin: 0px 20px;
+    font-size: 20px;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    flex: 1 1 calc(25% - 30px); /* 調整以適應更大的間距 */
+    min-width: 120px;
+    max-width: 200px;
+    text-decoration: none;
+    text-align: center;
+}
+@media (max-width: 769px) {
+    .blue-button, .red-button {
+        font-size: 16px;
+        min-width: 0px;
+    }
+}
+
+.small-blue-button, .small-red-button {
+    font-family: '標楷體', Arial, sans-serif;
+    padding: 5px 15px;
+    margin: 0px 0px;
+    font-size: 16px;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    /* min-width: 100px; */
+    max-width: 100px;
+    text-decoration: none;
+    text-align: center;
+}
+@media (max-width: 769px) {
+    .small-blue-button, .small-red-button {
+        font-size: 12px;
+        min-width: 0px;
+    }
+}
+
+.blue-button, .small-blue-button{
+    background-color: #007bff;
+    color: white;
+}
+
+.blue-button:hover, .small-blue-button:hover {
+    background-color: #0056b3;
+    color: white;
+}
+
+.red-button, .small-red-button {
+    background-color: #cc0000;
+    color: white;
+}
+
+.red-button:hover, .small-red-button:hover {
+    background-color: #990000;
+    color: white;
+}
+
+a {
+    color: #007bff;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+a:hover {
+    color: #0056b3;
+}
+
+/* form-group */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: flex;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+.form-group input[type="text"],
+.form-group input[type="password"],
+.form-group input[type="email"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.button-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px;
+    gap: 5px;
+}
+
+/* form-table */
+.form-table {
+    /* <table class="form-table"></table> */
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0 15px;
+    margin-bottom: 10px;
+}
+.form-table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    height: 35px;
+}
+.form-table .form-label {
+    /* <td class='form-label'></td> */
+    text-align: center;
+    font-weight: bold;
+    background-color: #f9f9f9;
+    width: 100px;
+}
+.form-table input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+.form-table select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+/*  */
+.center {
+    white-space: nowrap;
+    display: flex;
+    justify-content: center;
+    /* align-items: center; */
+    padding: 5px;
+
+
+}
+
+.notice {
+    color: red;
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
