@@ -2,6 +2,21 @@ DGX Web
 =======
 架設在AI實驗室的NVIDIA DGXS-V100的網頁
 
+連線
+---
+
+### SSH
+以下為 `~/.ssh/config`，密碼親自交接
+
+```SSH Config
+Host DGX
+  HostName 140.123.106.239
+  User lab120
+  Port 22
+  IdentityFile ~/.ssh/dgx
+```
+
+
 安裝
 ------
 
@@ -17,5 +32,6 @@ pip freeze > requirements.txt
 
 ### 執行
 ```bash
-sudo python3 dgxweb/app.py
+cd dgxweb
+sudo python3 app.py
 ```
