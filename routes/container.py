@@ -10,7 +10,7 @@ container_bp = Blueprint('container', __name__, url_prefix='/container')
 
 @container_bp.route('/all')
 def all_containers():
-    if current_user.rolenum <= 1:
+    if current_user.is_authenticated and current_user.rolenum <= 1:
         ac = Container().list(with_control=True)
         right = "<a href='/container/create' class='small-blue-button'>新增</a>"
     elif current_user.is_authenticated:
