@@ -12,6 +12,9 @@ from flask import jsonify
 from flask import Response
 from flask import current_app
 from flask import g
+import requests
+from threading import Thread
+from time import sleep
 
 ###* utils ###
 from os import urandom
@@ -59,6 +62,10 @@ from flask_jwt_extended import get_jwt
 from flask_jwt_extended import set_access_cookies
 
 jwt = JWTManager(APP)
+
+###* ###
+from flask_socketio import SocketIO, emit
+socketio = SocketIO(APP, cors_allowed_origins="*", async_mode='eventlet')
 
 ###* Sqlite ###
 from utils.model import db

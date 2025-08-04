@@ -9,7 +9,7 @@ from utils.g import clients
 from utils.utils import now_time
 
 ###* Register Blueprint ###
-from routes import APP
+from routes import APP, socketio
 from routes import *
 
 from werkzeug.exceptions import HTTPException
@@ -43,8 +43,15 @@ def remove_client(exc=None):
             del clients[ip]
 
 
-APP.run(
-    host='0.0.0.0',
-    port=80, 
-    debug=True
+# APP.run(
+#     host='0.0.0.0',
+#     port=80, 
+#     debug=True
+# )
+
+socketio.run(
+    app = APP,
+    host = '0.0.0.0',
+    port = 80, 
+    debug = True
 )

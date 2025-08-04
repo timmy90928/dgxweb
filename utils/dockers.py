@@ -77,6 +77,7 @@ from docker.models.images import Image as _Image
 from docker.types import DeviceRequest
 from utils.utils import errorCallback, timestamp, format_bytes, get_local_ip
 from utils.model import db, Container as ContainerDB
+import subprocess
 client = from_env()
 
 @errorCallback("尋找containers失敗", 404)
@@ -242,7 +243,53 @@ class Image:
                 ]
             )
         return results
-    
+
+def get_gpu_usage():
+    # 獲取GPU進程
+    gpu_result = subprocess.run([
+        'nvidia-smi', '--query-compute-apps=pid,gpu_uuid', '--format=csv,noheader'
+    ], capture_output=True, text=True)
+
+    # 獲取GPU卡號映射
+    gpu_map_result = subprocess.run([
+        'nvidia-smi', '--query-gpu=index,uuid', '--format=csv,noheader'
+    ], capture_output=True, text=True)
+
+    # 建立UUID到卡號的映射
+    uuid_to_index = {}
+    for line in gpu_map_result.stdout.strip().split('\n'):
+        index, uuid = line.split(', ')
+        uuid_to_index[uuid] = index
+
+    # 建立PID到容器的映射
+    pid_to_container = {}
+    for container in client.containers.list():
+        top_result = container.top()
+        if top_result and 'Processes' in top_result:
+            for process in top_result['Processes']:
+                pid_to_container[int(process[1])] = container.name
+
+    # 匹配並顯示結果
+    result = {
+        'GPU 0': None,
+        'GPU 1': None,
+        'GPU 2': None,
+        'GPU 3': None,
+    }
+
+    for line in gpu_result.stdout.strip().split('\n'):
+        if line:
+            pid, gpu_uuid = line.split(', ')
+            pid = int(pid)
+            gpu_index = uuid_to_index.get(gpu_uuid, "?")
+
+            if pid in pid_to_container:
+                container_name = pid_to_container[pid]
+
+                container_db:ContainerDB = ContainerDB.query.filter_by(name = container_name).first()
+                result[f"GPU {gpu_index}"] = [container_db.name, f"{container_db.user.name}({container_db.user.username})"]
+    return result
+
 if __name__ == '__main__':
 
     print(Image().list())

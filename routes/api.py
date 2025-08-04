@@ -46,3 +46,39 @@ def delete_container_api(name):
     result = delete_container(name)
     status = 200 if result['status'] == 'deleted' else 404
     return jsonify(result), status
+
+#* Send Email
+from utils.utils import Email
+@api_bp.route('/sendemail', methods=['POST'])
+def sendemail():
+    """
+    ```json
+    {
+        "Subject": "[AI LAB DGX] 啟用帳號",
+        "From": "AI Lab DGX Team",
+        "To": "weiwen@alum.ccu.edu.tw",
+        "Cc": "",
+        "Text": [
+            "第一段", 
+            "第二段"
+        ]
+    }
+    ```
+    """
+    json:dict = request.get_json()
+    with Email(json['To']) as email:
+            text = json['Text']
+            text =  text if len(text) == 0 else "\n".join(text)
+            msg = email.getText(
+                f"{text}\n\nAI LAB DGX TEAM" if request.remote_addr == '127.0.0.1' else f"{text}\n\n此訊息由 {request.remote_addr} 使用 AILAB DGX API 發出"
+            )
+
+            msg['Subject'] = json['Subject']
+            msg['From'] = json['From']
+            msg['To'] = json['To']
+            msg['Cc'] = json.get('Cc', '')
+
+            status = email.sendMessage(msg.as_string())
+
+    ap = ApiPage(response=status)
+    return ap.createResponse()
