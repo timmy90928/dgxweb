@@ -58,6 +58,7 @@ def sendemail():
         "From": "AI Lab DGX Team",
         "To": "weiwen@alum.ccu.edu.tw",
         "Cc": "",
+        "Bcc": "",
         "Text": [
             "第一段", 
             "第二段"
@@ -77,8 +78,35 @@ def sendemail():
             msg['From'] = json['From']
             msg['To'] = json['To']
             msg['Cc'] = json.get('Cc', '')
+            msg['Bcc'] = json.get('Bcc', '')
 
             status = email.sendMessage(msg.as_string())
 
     ap = ApiPage(response=status)
+    return ap.createResponse()
+
+#* Identity Authentication
+from utils.model import User as UserDB
+@api_bp.route('/auth', methods=['POST'])
+def auth():
+    """
+    ```json
+    {
+        "username": "...",
+        "password": "..."
+    }
+    ```
+    """
+    json:dict = request.get_json()
+    user_db:UserDB = UserDB.query.filter_by(username=json['username']).first()
+    if not user_db:
+        ap = ApiPage(404, response = f"{json['username']} user not found.")
+    elif user_db.check_password(json['password']):
+        ap = ApiPage(response={
+            'name': user_db.name,
+            'email': user_db.email
+        })
+    else:
+        ap = ApiPage(401, response = f"{user_db.name}'s identity authentication failed.")
+
     return ap.createResponse()
