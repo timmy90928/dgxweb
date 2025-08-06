@@ -73,10 +73,10 @@ API
 ```json
 {
     "Subject": "Title",
-    "From": "AILAB",
-    "To": "weiwen@alum.ccu.edu.tw",
-    "Cc": "weiwen@alum.ccu.edu.tw, weiwen@alum.ccu.edu.tw",
-    "Bcc": "",
+    "From": "AILAB",    // Optional(default: AILAB DGX API)
+    "To": "weiwen@alum.ccu.edu.tw", // Union[str, list]
+    "Cc": [""],     // Union[str, list]
+    "Bcc": [""],    // Union[str, list]
     "Text": [
         "第一段", 
         "第二段"

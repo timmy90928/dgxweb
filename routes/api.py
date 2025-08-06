@@ -54,11 +54,11 @@ def sendemail():
     """
     ```json
     {
-        "Subject": "[AI LAB DGX] 啟用帳號",
-        "From": "AI Lab DGX Team",
-        "To": "weiwen@alum.ccu.edu.tw",
-        "Cc": "",
-        "Bcc": "",
+        "Subject": "[AILAB DGX] 啟用帳號",
+        "From": "AI Lab DGX Team", # Optional
+        "To": ["weiwen@alum.ccu.edu.tw"],
+        "Cc": [""],
+        "Bcc": [""],
         "Text": [
             "第一段", 
             "第二段"
@@ -67,23 +67,47 @@ def sendemail():
     ```
     """
     json:dict = request.get_json()
-    with Email(json['To']) as email:
-            text = json['Text']
-            text =  text if len(text) == 0 else "\n".join(text)
-            msg = email.getText(
-                f"{text}\n\nAI LAB DGX TEAM" if request.remote_addr == '127.0.0.1' else f"{text}\n\n此訊息由 {request.remote_addr} 使用 AILAB DGX API 發出"
-            )
 
-            msg['Subject'] = json['Subject']
-            msg['From'] = json['From']
-            msg['To'] = json['To']
-            msg['Cc'] = json.get('Cc', '')
-            msg['Bcc'] = json.get('Bcc', '')
+    to = json.get('To', [])
+    cc = json.get('Cc', [])
+    bcc = json.get('Bcc', [])
 
-            status = email.sendMessage(msg.as_string())
+    to_list = to if isinstance(to, list) else [to]
+    cc_list = cc if isinstance(cc, list) else [cc]
+    bcc_list = bcc if isinstance(bcc, list) else [bcc]
 
-    ap = ApiPage(response=status)
-    return ap.createResponse()
+    all_recipients = to_list + cc_list + bcc_list 
+
+    # 確保收件人列表不為空
+    if not all_recipients:
+        ap = ApiPage(response={"status": "error", "message": "No recipients provided"})
+        return ap.createResponse() 
+
+    with Email(all_recipients) as email:
+        text = json['Text']
+        text =  text if len(text) == 0 else "\n".join(text)
+        msg = email.getText(
+            f"{text}\n\nAILAB DGX TEAM" if request.remote_addr == '127.0.0.1' else f"{text}\n\n此訊息由 {request.remote_addr} 使用 AILAB DGX API 發出"
+        )
+
+        msg['Subject'] = json.get('Subject', '')
+        msg['From'] = json.get('From', 'AILAB DGX TEAM' if request.remote_addr == '127.0.0.1' else 'AILAB DGX API')
+        msg['To'] = ", ".join(to_list)
+        msg['Cc'] = ", ".join(cc_list)
+
+        status = email.sendMessage(msg.as_string())
+        ap = ApiPage(response = status)
+        return ap.createResponse()
+
+def send_email_in_background(json_data):
+    def sendemail_thread(json_data):
+        sleep(1) # To prioritize alert.
+        return requests.post( # Using this system's API.
+            'http://localhost/api/sendemail', json = json_data, timeout = 10
+        )
+    Thread(
+        target=sendemail_thread, args=(json_data,)
+    ).start()
 
 #* Identity Authentication
 from utils.model import User as UserDB
