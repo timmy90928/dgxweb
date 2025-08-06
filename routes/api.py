@@ -100,6 +100,7 @@ def sendemail():
         return ap.createResponse()
 
 def send_email_in_background(json_data):
+    """No waiting for delays in sending mail."""
     def sendemail_thread(json_data):
         sleep(1) # To prioritize alert.
         return requests.post( # Using this system's API.

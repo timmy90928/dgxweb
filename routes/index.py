@@ -57,17 +57,13 @@ def logout():
 
 @index_bp.route('/register', methods=['GET', 'POST'])
 def register(): 
-    def send_email_in_background(json_data):
-        sleep(1) # To prioritize alert.
-        return requests.post( # Using this system's API.
-            'http://localhost/api/sendemail', json = json_data, timeout = 10
-        )
+    from .api import send_email_in_background
     if request.method == 'POST':
         token = Token('register').generate(request.form)
         _email = request.form['email']
         _username = request.form['username']
 
-        datas = {
+        send_email_in_background({
             "Subject": "[AI LAB DGX] 啟用帳號",
             "From": "AI Lab DGX Team",
             "To": _email,
@@ -77,12 +73,8 @@ def register():
                 "請點選下面連結來啟用帳號",
                 f"{get_local_ip()}/register/{token}"
             ]
-        }
-
-        Thread( #* No waiting for delays in sending mail.
-            target=send_email_in_background,
-            args=(datas,)
-        ).start()
+        })
+  
 
         return redirect(f'/alert/請於5分鐘內前往 {_email} 啟用帳號?to=/login')
 
