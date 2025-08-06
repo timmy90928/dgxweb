@@ -22,12 +22,12 @@
     {# {% block title %}Title{% endblock %} #}
     <link
       rel="icon"
-      href="{{ url_for('static', filename = 'icon/ai server icon.ico') }}"
+      href="{{ url_for('static', filename = 'icon/AILAB_DGX_LOGO.ico') }}"
       type="image/x-icon"
     />
     <link
       rel="shortcut icon"
-      href="{{ url_for('static', filename = 'icon/ai server icon.ico') }}"
+      href="{{ url_for('static', filename = 'icon/AILAB_DGX_LOGO.ico') }}"
       type="image/x-icon"
     />
 
@@ -82,10 +82,20 @@
             <li class="nav-item">
               <a class="nav-link" href="/server">Server</a>
             </li>
+            
+            <!--* Administrator's functions -->
+            {% if current_user.is_authenticated and current_user.rolenum <= 1%}
+            <li class="nav-item">
+              <a class="nav-link" href="/admin">Admin</a>
+            </li>
+            {%endif%}
+            
             <li class="nav-item">
               <a class="nav-link" href="https://github.com/timmy90928/dgxweb">Github</a>
             </li>
           </ul>
+
+          <!--* Right (login and logout) -->
           <span class="navbar-text"> 
             {% if current_user.is_authenticated%}
             <span>
@@ -96,6 +106,7 @@
             <a class="nav-link" href="/login">登入</a>  
             {%endif%}
           </span>
+
         </div>
       </div>
     </nav>
