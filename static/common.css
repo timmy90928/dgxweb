@@ -120,7 +120,7 @@ tr:hover {
 
 /* button */
 .blue-button, .red-button {
-    font-family: '標楷體', Arial, sans-serif;
+    /* font-family: '標楷體', Arial, sans-serif; */
     padding: 10px 15px;
     margin: 0px 20px;
     font-size: 20px;
@@ -142,7 +142,7 @@ tr:hover {
 }
 
 .small-blue-button, .small-red-button {
-    font-family: '標楷體', Arial, sans-serif;
+    /* font-family: '標楷體', Arial, sans-serif; */
     padding: 5px 15px;
     margin: 0px 0px;
     font-size: 16px;

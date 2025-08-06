@@ -1,75 +1,159 @@
-{% extends "common/base.html" %} 
-{% block title %}{{ title }}{% endblock %} 
-{%block head %} {{ super() }} {% endblock %} 
+{% extends "common/base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block head %}
+  {{ super() }}
+  <style>
+    /* 覆寫 .container 樣式，使其成為垂直置中的 Flexbox 容器 */
+    .container {
+      display: flex;
+      justify-content: center; /* 水平置中 */
+      align-items: center; /* 垂直置中 */
+      min-height: calc(100vh - 56px - 40px); /* 扣除導覽列和頁腳高度 */
+      padding: 0;
+      margin: 0 auto;
+    }
+    
+    /* 確保頁面內容在小螢幕上不會溢出 */
+    @media (max-width: 576px) {
+      .container {
+        padding: 1rem;
+      }
+    }
 
-{% block top %} {% endblock %} 
+    /* 以下為卡片和按鈕的樣式，與之前版本相同 */
+    .form-container-wrapper {
+      max-width: 450px;
+      width: 100%;
+      padding: 2rem;
+      background-color: #fff;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+    }
+    
+    .form-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    .form-header h3 {
+      font-size: 1.5rem;
+      color: #333;
+    }
+    
+    .button-group {
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+    }
 
+    .form-submit-btn, .form-reset-btn {
+      flex: 1;
+      padding: 0.5rem 1rem;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+      text-decoration: none;
+      color: #fff;
+      border: 1px solid;
+    }
+    
+    .form-submit-btn {
+      background-color: #007bff;
+      border-color: #007bff;
+    }
 
-{%block body %} 
-<div class="header-section">
-    <div> <a href="/register" class="small-blue-button">註冊</a></div>
+    .form-submit-btn:hover {
+      background-color: #0056b3;
+      border-color: #0056b3;
+    }
+    
+    .form-reset-btn {
+      background-color: #6c757d;
+      border-color: #6c757d;
+    }
+
+    .form-reset-btn:hover {
+      background-color: #5a6268;
+      border-color: #5a6268;
+    }
+
+    .bottom-links {
+      text-align: center;
+      margin-top: 1.5rem;
+    }
+
+    .bottom-links a {
+      font-size: 0.9rem;
+      color: #007bff;
+      text-decoration: none;
+    }
+    
+    .bottom-links a:hover {
+      text-decoration: underline;
+    }
+
+    .bottom-links a + a {
+      margin-left: 1.5rem;
+    }
+  </style>
+{% endblock %}
+
+{% block top %}{% endblock %}
+
+{% block body %}
+<div class="form-container-wrapper">
+  <div class="form-header">
     <h3>{{ title }}</h3>
-    <div> <a href="/register" class="small-red-button">忘記密碼</a></div>
+  </div>
 
-</div>
-<div class="container">
-        
-    {% if title == '登入' %}
-      <!-- <form action="/account/edit/{{ current_user.id }}" method="post" enctype="multipart/form-data" class="needs-validation" novalidate> -->
-      <form action="/login" method="post">
-    {% else %}
-      <form action="/register" method="post" enctype="multipart/form-data" >
-  
+  {% if title == '登入' %}
+    <form action="/login" method="post">
+  {% else %}
+    <form action="/register" method="post" enctype="multipart/form-data">
+  {% endif %}
+
+    {% if title != '登入' %}
+      <div class="mb-3">
+        <label for="email" class="form-label">信箱</label>
+        <input name='email' type='email' id='email' autocomplete="email" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="name" class="form-label">姓名</label>
+        <input name='name' type='text' id='name' autocomplete="name" class="form-control" required>
+      </div>
+    {% endif %}
+
+    <div class="mb-3">
+      <label for="username" class="form-label">使用者名稱(學號或職號)</label>
+      <input name='username' type='text' id='username' autocomplete="username" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="password" class="form-label">密碼</label>
+      <input name='password' type='password' id='password' autocomplete="current-password" class="form-control" required>
+    </div>
+
+    <div class="button-group">
+      {% if title == '登入' %}
+        <button type='submit' class="btn btn-primary form-submit-btn">登入</button>
+      {% else %}
+        <button type='submit' class="btn btn-primary form-submit-btn">完成</button>
+        <button type='reset' class="btn btn-secondary form-reset-btn">重設</button>
       {% endif %}
-
-      {% if title != '登入' %}
-      
-      <div class="input-group mb-3 has-validation">
-          <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-          <div class="form-floating">
-              <input name='email' type='email' id='email' autocomplete="email" class="form-control" placeholder="email" required>
-              <label for="email">信箱</label>
-          </div>
-      </div>
-      <div class="input-group mb-3 has-validation">
-          <span class="input-group-text"><i class="bi bi-person"></i></span>
-          <div class="form-floating">
-              <input name='name' type='text' id='name' autocomplete="name" class="form-control" placeholder="name" required>
-              <label for="name">姓名</label>
-          </div>
-      </div>
+    </div>
+    
+    <div class="bottom-links">
+      {% if title == '登入' %}
+        <a href="/register">註冊</a>
+        <a href="/forgot-password">忘記密碼</a>
+      {% else %}
+        <a href="/login">已經有帳號？登入</a>
       {% endif %}
-      <div class="input-group mb-3">
-          <span class="input-group-text">@</span>
-          <div class="form-floating">
-              <input name='username' type='text' id='username' autocomplete="username" class="form-control" placeholder="username" required>
-              <label for="username">使用者名稱(學號或職號)</label>
-          </div>
-      </div>
-        
-      <div class="input-group mb-3">
-          <span class="input-group-text"><i class="bi bi-key"></i></span>
-          <div class="form-floating">
-              <input name='password' type='password' id='password' autocomplete="current-password" class="form-control" placeholder="password">
-              <label for="password">密碼</label>
-          </div>
-      </div>
+    </div>
 
-      <div class="button-group">
-          <div>
-              {% if title == '登入' %}
-              <input type='submit' value='登入' class="blue-button">
-              <input type='reset'  value='重設' class="red-button">
-              {% else %}
-              <input type='submit' value='完成' class="blue-button">
-              <input type='reset'  value='重設' class="red-button">
-              {% endif %}
-          </div>
-        </div>
-      </form>
+  </form>
 </div>
-{% endblock %} 
+{% endblock %}
 
-
-
-{% block bottom %} {% endblock %} 
+{% block bottom %}{% endblock %}
