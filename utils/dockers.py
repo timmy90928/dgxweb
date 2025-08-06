@@ -170,15 +170,22 @@ class Container:
             except Exception as e:
                 image = f"ERROR: {e}"
 
+            if is_runing:
+                remove_confirm = f"Confirm('是否確定刪除 {container.name} , 請先停止container','/container/all')"
+                container_start_or_stop = f"<a href='/container/stop/{container.id}'>stop</a>"
+            else:
+                remove_confirm = f"Confirm('是否確定刪除 {container.name},'/container/remove/{container.id}')"
+                container_start_or_stop = f"<a href='/container/start/{container.id}'>start</a>"
+
             results.append(
                 [
-                    f"<a href={href}>{container.name}</a>" if with_control and is_runing else container.name,
+                    f"<a href='{href}'>{container.name}</a>" if with_control and is_runing else container.name,
                     user, image,
                     timestamp(iso = container.attrs['Created']),
                     timestamp(iso = container.attrs['State']['StartedAt'])if is_runing else '-',
                     container.status,
-                    f"<a href='/container/{'stop' if is_runing else 'start'}/{container.id}'>{'stop' if is_runing else 'start'}</a>" if with_control else '-',
-                    f"<a href='/container/remove/{container.id}'>Remove</a>" if with_control else '-',
+                    container_start_or_stop if with_control else '-',
+                    f"<a class='small-red-button' onclick=\"{remove_confirm}\")>Remove</a>" if with_control else '-',
                 ]
             )
         return results

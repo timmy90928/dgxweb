@@ -1,0 +1,16 @@
+{# templates/admin/custom_index.html #}
+{% extends 'admin/master.html' %}
+
+{% block body %}
+    <div class="container">
+        {% if admin_notice %}
+            <div class="alert alert-warning" role="alert">
+            {{ admin_notice | safe }}
+            </div>
+        {% else %}
+            <p>Welcome to the backend system. </p>
+        {% endif %}
+        <a href="/" class="btn btn-primary">回首頁</a>
+    </div>
+    
+{% endblock %}

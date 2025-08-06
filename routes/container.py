@@ -2,11 +2,21 @@
 from . import *
 from utils.dockers import Container, Image, get_all_containers, client
 from utils.model import Container as ContainerDB, User as user_db
-from utils.utils import Token
+from utils.utils import Token, login_required_role
 from utils.g import current_user
 from pathlib import Path
 import subprocess
 container_bp = Blueprint('container', __name__, url_prefix='/container')
+
+def check_fn(container_id):
+    container_db:ContainerDB = ContainerDB.query.filter_by(
+        container_id=container_id
+    ).first()
+    if current_user.rolenum <= 1:
+        pass
+    elif container_db.user.id != current_user.id:
+        abort(401, response='請勿透過不正當方式使用別人的Container')
+login_required_container_id = login_required_role(check_key='container_id', check_fn=check_fn)
 
 @container_bp.route('/all')
 def all_containers():
@@ -40,6 +50,7 @@ def container_create():
     return render_template('container_create.html', images = images)
 
 @container_bp.route('/stop/<container_id>')
+@login_required_container_id
 def container_stop(container_id):
     ###* Search for container with <container_id> ###
     container = Container(container_id).container
@@ -51,6 +62,7 @@ def container_stop(container_id):
     return redirect('/container/all')
 
 @container_bp.route('/start/<container_id>')
+@login_required_container_id
 def container_start(container_id):
     ###* Search for database and container with <container_id> ###
     container_db:ContainerDB = ContainerDB.query.filter_by(container_id=container_id).first()
@@ -75,6 +87,7 @@ def container_start(container_id):
     return redirect('/container/all')
 
 @container_bp.route('/remove/<container_id>')
+@login_required_container_id
 def container_remove(container_id):
     ###* Search for database and container with <container_id> ###
     container_db:ContainerDB = ContainerDB.query.filter_by(container_id=container_id).first()
