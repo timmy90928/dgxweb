@@ -21,7 +21,29 @@ class IndexView(AdminIndexView):
         else:
             return redirect('/')
     
-
+    @expose('/broadcast', methods=['GET', 'POST'])
+    def broadcast(self,  **kwargs):
+        if current_user.is_authenticated and current_user.rolenum < 1:
+            all_users:list[UserDB] = UserDB.query.all()
+            admin_user:UserDB = UserDB.query.filter_by(username='admin').first()
+            if request.method == 'POST':
+                from .api import send_email_in_background
+                
+                form = request.form
+                send_email_in_background({
+                        "Subject": form['subject'],# "[AILAB DGX] 廣播測試",
+                        "From": "AILAB DGX TEAM",
+                        "To": admin_user.email,
+                        "Bcc": [user.email for user in all_users],
+                        "Text": str(form['content']).split('\n')
+                    })
+                return redirect('/alert/已寄送, 請等待一下後, 到自己的信箱確認是否成功?to=/admin/broadcast')
+            
+            return self.render('admin/broadcast.html', all_users=all_users, admin_user=admin_user)
+        
+        else:
+            return redirect('/')
+    
 class AuthModelView(ModelView):
     def is_accessible(self):
         return current_user.is_authenticated and current_user.rolenum < 1

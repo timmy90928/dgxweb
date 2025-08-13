@@ -79,9 +79,10 @@ from .index import index_bp
 from .container import container_bp
 from .api import api_bp
 from .server import server_bp
+from .chat import chat_bp
 
 initAdmin(APP)
-ALL_BP = [index_bp, api_bp, server_bp, container_bp]
+ALL_BP = [index_bp, api_bp, server_bp, container_bp, chat_bp]
 
 for bp in ALL_BP:
     APP.register_blueprint(bp)

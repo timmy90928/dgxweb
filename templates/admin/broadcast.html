@@ -1,0 +1,59 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+<div class="container-fluid mt-3">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>發送廣播郵件</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/admin/broadcast">
+                        <div class="mb-3">
+                            <label for="subject" class="form-label">主旨:</label>
+                            <input type="text" class="form-control" id="subject" name="subject" value="[AILAB DGX] 停電警告" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="content" class="form-label">內容:</label>
+                            <textarea class="form-control" id="content" name="content" rows="10" required>
+DGX的使用者 您好:
+
+根據學校的訊息，將於 ?/??(?) 進行全校停電
+
+因此我們會在 ?/??(?) 將 DGX 安全關機，請各位使用者提前結束自己的工作
+
+謝謝~
+
+若有任何問題請詢問管理員{{admin_user.name}}, 信箱為{{admin_user.email}}
+                            </textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">發送郵件</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4>收件人名單</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for user in all_users %}
+                        <li class="list-group-item">
+                            <strong>{{ user.name }}</strong> ({{ user.email }})
+                        </li>
+                        {% else %}
+                        <li class="list-group-item">
+                            目前沒有任何使用者。
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
