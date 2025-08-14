@@ -168,6 +168,9 @@ class User(db.Model):
         self.name = name
         self.email = email
         self.role = role
+        
+    def password_(self, password):
+        self.password = hash(password)
 
     def check_password(self, password):
         """

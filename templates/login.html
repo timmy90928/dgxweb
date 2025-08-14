@@ -109,11 +109,13 @@
 
   {% if title == '登入' %}
     <form action="/login" method="post">
+  {% elif title == '忘記密碼' %}
+    <form action="/login/forgot" method="post">
   {% else %}
     <form action="/register" method="post" enctype="multipart/form-data">
   {% endif %}
 
-    {% if title != '登入' %}
+    {% if title == '註冊' %}
       <div class="mb-3">
         <label for="email" class="form-label">信箱</label>
         <input name='email' type='email' id='email' autocomplete="email" class="form-control" required>
@@ -129,14 +131,16 @@
       <input name='username' type='text' id='username' autocomplete="username" class="form-control" required>
     </div>
 
-    <div class="mb-3">
-      <label for="password" class="form-label">密碼</label>
-      <input name='password' type='password' id='password' autocomplete="current-password" class="form-control" required>
-    </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">{% if title == '忘記密碼' %}新{% endif %}密碼</label>
+        <input name='password' type='password' id='password' autocomplete="current-password" class="form-control" required>
+      </div>
 
     <div class="button-group">
       {% if title == '登入' %}
         <button type='submit' class="btn btn-primary form-submit-btn">登入</button>
+      {% elif title == '忘記密碼' %}
+        <button type='submit' class="btn btn-primary form-submit-btn">送出</button>
       {% else %}
         <button type='submit' class="btn btn-primary form-submit-btn">完成</button>
         <button type='reset' class="btn btn-secondary form-reset-btn">重設</button>
@@ -146,7 +150,9 @@
     <div class="bottom-links">
       {% if title == '登入' %}
         <a href="/register">註冊</a>
-        <a href="/forgot-password">忘記密碼</a>
+        <a href="/login/forgot">忘記密碼</a>
+      {% elif title == '忘記密碼' %}
+        <a href="/login">回到登入頁面</a>
       {% else %}
         <a href="/login">已經有帳號？登入</a>
       {% endif %}
