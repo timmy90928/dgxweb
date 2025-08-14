@@ -174,7 +174,7 @@ class Container:
                 remove_confirm = f"Confirm('是否確定刪除 {container.name} , 請先停止container','/container/all')"
                 container_start_or_stop = f"<a href='/container/stop/{container.id}'>stop</a>"
             else:
-                remove_confirm = f"Confirm('是否確定刪除 {container.name},'/container/remove/{container.id}')"
+                remove_confirm = f"Confirm('是否確定刪除 {container.name}','/container/remove/{container.id}')"
                 container_start_or_stop = f"<a href='/container/start/{container.id}'>start</a>"
 
             results.append(
