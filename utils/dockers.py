@@ -179,7 +179,7 @@ class Container:
 
             results.append(
                 [
-                    f"<a href='{href}'>{container.name}</a>" if with_control and is_runing else container.name,
+                    f"<a href='{href}' target='_blank'>{container.name}</a>" if with_control and is_runing else container.name,
                     user, image,
                     timestamp(iso = container.attrs['Created']),
                     timestamp(iso = container.attrs['State']['StartedAt'])if is_runing else '-',
