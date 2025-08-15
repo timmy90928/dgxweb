@@ -2,10 +2,10 @@ DGX Web
 =======
 架設在AI實驗室的NVIDIA DGXS-V100的網頁
 
-連線
----
+使用
+===
 
-### SSH
+### 連線 (SSH)
 以下為 `~/.ssh/config`，密碼親自交接
 
 ```SSH Config
@@ -16,11 +16,26 @@ Host DGX
   IdentityFile ~/.ssh/dgx
 ```
 
+其他的詳細使用方法可參考我的筆記: [SSH筆記](https://hackmd.io/@timmy90928/ssh)
 
-安裝
-------
+### 開機
+使用 tmux, 如下所示
+```bash
+tmux new -s dgxweb -c ~/dgxweb/
+sudo python3 app.py
+```
 
-### 安裝依賴完竟
+###  關機
+安全的物理關機
+```bash
+sudo shutdown -h now 
+```
+
+安裝與執行
+---------
+若是第一次使用請先執行此節
+
+### 安裝依賴環境
 依照自己的需求備註
 
 ```bash
@@ -36,12 +51,12 @@ cd dgxweb
 sudo python3 app.py
 ```
 
-Server持久化
------------
-- 結構: Session -> Window -> Pane
+Tmux (Server 持久化)
+-------------------
+- Tmux 結構: Session -> Window -> Pane
 - 在 Tmux 中使用快速鍵, 都需要先按 `Ctrl+b`
 
-### 創建新 Session 並執行 Server
+#### 創建新 Session 並執行 Server
 ```bash
 tmux new -s dgxweb -c ~/dgxweb/
 sudo python3 app.py
@@ -50,30 +65,23 @@ sudo python3 app.py
 tmux detach
 ```
 
-### 列出所有當前正在運行的 Tmux Sessions
+#### 列出所有當前正在運行的 Tmux Sessions
 ```bash
 tmux ls
-#Output: dgxweb: 1 windows (created Fri Aug 15 21:59:56 2025)
+# Output: dgxweb: 1 windows (created Fri Aug 15 21:59:56 2025)
 ```
 
-### 重新連線到一個已存在的 Session
+#### 重新連線到一個已存在的 Session
 ```bash
 tmux attach -t dgxweb
 ```
 
-### 終止與關閉 Session
+#### 終止與關閉 Session
 ```bash
 tmux kill-session -t dgxweb
 
 #! 終止所有正在運行的 Tmux sessions
 tmux kill-server
-```
-
-
-關機
-----
-```bash
-sudo shutdown -h now 
 ```
 
 檔案介紹
