@@ -36,6 +36,70 @@ cd dgxweb
 sudo python3 app.py
 ```
 
+Server持久化
+-----------
+- 結構: Session -> Window -> Pane
+- 在 Tmux 中使用快速鍵, 都需要先按 `Ctrl+b`
+
+### 創建新 Session 並執行 Server
+```bash
+tmux new -s dgxweb -c ~/dgxweb/
+sudo python3 app.py
+
+# 離開 Session ([Ctrl+b]+ [d])
+tmux detach
+```
+
+### 列出所有當前正在運行的 Tmux Sessions
+```bash
+tmux ls
+#Output: dgxweb: 1 windows (created Fri Aug 15 21:59:56 2025)
+```
+
+### 重新連線到一個已存在的 Session
+```bash
+tmux attach -t dgxweb
+```
+
+### 終止與關閉 Session
+```bash
+tmux kill-session -t dgxweb
+
+#! 終止所有正在運行的 Tmux sessions
+tmux kill-server
+```
+
+
+關機
+----
+```bash
+sudo shutdown -h now 
+```
+
+檔案介紹
+-------
+```bash
+LAB120
+├─ dgxweb       # This system
+|  ├─ routes
+|  |  └─ ...
+|  ├─ script
+|  |  └─ ...
+|  ├─ static
+|  |  └─ ...
+|  ├─ templates
+|  |  └─ ...
+|  ├─ utils
+|  |  └─ ...
+|  ├─ dgx.db    # Database (please back up regularly)
+|  └─ app.py    # Main program
+├─ .ssh         # Storing SSH Public Key
+|  └─ authorized_keys
+└─ user_data    # All User Workspaces
+   ├─ 613415071
+   └─ ...
+```
+
 API
 ===
 
