@@ -48,7 +48,7 @@ pip freeze > requirements.txt
 ### 執行
 ```bash
 cd dgxweb
-sudo python3 app.py
+sudo python3 app.py --mode development
 ```
 
 Tmux (Server 持久化)

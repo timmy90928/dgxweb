@@ -1,6 +1,6 @@
-from . import *
+from application import *
 
-from utils.model import db, User as UserDB, Setting, Container
+from application.model import db, User as UserDB, Setting, Container
 from flask import Flask
 from flask_admin import Admin, expose, AdminIndexView
 from flask_admin.menu import MenuLink
@@ -11,11 +11,12 @@ from utils.g import current_user
 class IndexView(AdminIndexView):
     @expose('/')
     def index(self):
-        if current_user.is_authenticated and current_user.rolenum < 1:
+        if current_user.is_authenticated and current_user.rolenum <= 1:
             #TODO 
             string = [
                 "管理員注意事項",
-                "1. 因任何原因 (如: 停電) 需要將DGX關機時, 請先使用 Other/Broadcast 功能通知所有人."
+                "1. 對 DGX 的任何操作先優先使用此系統, 若此系統沒有再對 DGX 下指令.",
+                "2. 因任何原因 (如: 停電) 需要將DGX關機時, 請先使用 Other/Broadcast 功能通知所有人."
             ]
             return self.render("admin/index.html", admin_notice = "<br>".join(string))
         else:
@@ -23,7 +24,7 @@ class IndexView(AdminIndexView):
     
     @expose('/broadcast', methods=['GET', 'POST'])
     def broadcast(self,  **kwargs):
-        if current_user.is_authenticated and current_user.rolenum < 1:
+        if current_user.is_authenticated and current_user.rolenum <= 1:
             all_users:list[UserDB] = UserDB.query.all()
             admin_user:UserDB = UserDB.query.filter_by(username='admin').first()
             if request.method == 'POST':
@@ -46,14 +47,14 @@ class IndexView(AdminIndexView):
     
 class AuthModelView(ModelView):
     def is_accessible(self):
-        return current_user.is_authenticated and current_user.rolenum < 1
+        return current_user.is_authenticated and current_user.rolenum <= 1
 
     def inaccessible_callback(self, name, **kwargs):
         return redirect('/login')
     
 class AuthFileAdmin(FileAdmin):
     def is_accessible(self):
-        return current_user.is_authenticated and current_user.rolenum < 1
+        return current_user.is_authenticated and current_user.rolenum <= 1
 
     def inaccessible_callback(self, name, **kwargs):
         return redirect('/login')

@@ -1,7 +1,7 @@
 
-from . import *
+from application import *
 from utils.dockers import Container, Image, get_all_containers, client
-from utils.model import Container as ContainerDB, User as user_db
+from application.model import db, Container as ContainerDB, User as user_db
 from utils.utils import Token, login_required_role
 from utils.g import current_user
 from pathlib import Path

@@ -1,4 +1,4 @@
-from . import *
+from application import *
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -111,7 +111,7 @@ def send_email_in_background(json_data):
     ).start()
 
 #* Identity Authentication
-from utils.model import User as UserDB
+from application.model import User as UserDB
 @api_bp.route('/auth', methods=['POST'])
 def auth():
     """

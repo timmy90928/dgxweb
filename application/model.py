@@ -230,3 +230,4 @@ class Setting(db.Model):
     def __init__(self, key, value):
         self.key = key
         self.value = value
+

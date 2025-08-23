@@ -2,7 +2,8 @@
 from . import *
 from utils.dockers import Container, Image, get_all_containers, get_gpu_usage
 from utils.utils import get_local_ip, Token, Email, hash, get_ssh_key
-from utils.model import User as UserDB
+from application.model import User as UserDB
+from application import *
 from utils.g import User as Guser
 
 index_bp = Blueprint('index', __name__, url_prefix='/')

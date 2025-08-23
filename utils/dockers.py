@@ -76,7 +76,7 @@ from docker.models.containers import Container as _Container
 from docker.models.images import Image as _Image
 from docker.types import DeviceRequest
 from utils.utils import errorCallback, timestamp, format_bytes, get_local_ip
-from utils.model import db, Container as ContainerDB
+from application.model import db, Container as ContainerDB
 import subprocess
 client = from_env()
 

@@ -32,7 +32,7 @@ class User(_UserMixin):
             username,name,role, email = 'developer','開發人員','developer','developer'
         else:
             try:  
-                from utils.model import User as UserDB
+                from application.model import User as UserDB
                 user:UserDB = UserDB.query.filter_by(id = user_id).first()
                 name = user.name
                 username = user.username

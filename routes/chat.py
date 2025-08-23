@@ -1,5 +1,5 @@
 
-from . import *
+from application import *
 
 chat_bp = Blueprint('chat', __name__, url_prefix='/chat')
 
