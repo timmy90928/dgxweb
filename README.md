@@ -39,7 +39,8 @@ sudo shutdown -h now
 依照自己的需求備註
 
 ```bash
-pip install -r requirements.txt
+#! 需安裝在 root 使用者
+sudo pip3 install -r requirements.txt
 
 # Update requirements.txt
 pip freeze > requirements.txt
