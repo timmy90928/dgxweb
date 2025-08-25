@@ -46,6 +46,35 @@ sudo pip3 install -r requirements.txt
 pip freeze > requirements.txt
 ```
 
+### Migrate
+在 `migrations/env.py` 加入：
+```python
+from application import APP, db
+
+# ... 其他程式碼 ...
+
+def run_migrations_online():
+    """Run migrations in 'online' mode."""
+
+    context.configure(
+        connection=connection,
+        target_metadata=db.metadata, # 改這裡
+    )
+
+    with context.begin_transaction():
+        context.run_migrations()
+
+    # ... 其他程式碼 ...
+```
+接著在終端機執行：
+```bash
+sudo alembic init migrations
+sudo alembic revision --autogenerate -m "Initial migration"
+sudo alembic upgrade head
+```
+
+
+
 ### 執行
 ```bash
 cd dgxweb

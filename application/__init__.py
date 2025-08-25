@@ -105,10 +105,8 @@ def create_app(config_name:Literal['development', 'production', 'testing'] = 'pr
     APP.config.from_object(configs[config_name])
 
     ###* Sqlite ###
-    from application.model import db
-    db.init_app(APP) # Database (SQLAlchemy)
-    with APP.app_context():
-        db.create_all()
+    from application.model import initDB
+    initDB(APP) # Database (SQLAlchemy)
 
     ###* Register Blueprint ###
     from routes import ALL_BP
