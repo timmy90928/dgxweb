@@ -23,6 +23,7 @@ from threading import Thread
 from time import sleep
 
 ###* utils ###
+from loguru import logger
 from os import urandom
 from utils.utils import errorCallback
 from utils.utils import now_time
@@ -71,7 +72,10 @@ jwt = JWTManager(APP)
 from werkzeug.exceptions import HTTPException
 @APP.errorhandler(HTTPException)
 def all_error_handler(e:HTTPException):
-    # abort(status_code, response=f"{status_code}")
+    from utils.g import current_user
+    user = f"{current_user.name}<{current_user.username}>" if current_user.is_authenticated else "未登入"
+    ip = request.remote_addr
+    logger.exception(f"[{ip}({user})] {e}")
     page = [
         ['HTTP狀態碼', e.code],
         ['HTTP狀態', e.name],
@@ -90,6 +94,16 @@ def track_connection() -> None:
     ip = request.remote_addr
     clients[ip] = time()
 
+from flask import Response
+@APP.after_request
+def log_request(response:Response) -> None:
+    from utils.g import current_user
+    ip = request.remote_addr
+    if not (300 <= response.status_code < 400):
+        user = f"{current_user.name}<{current_user.username}>" if current_user.is_authenticated else "未登入"
+        logger.info(f"[{ip}({user})] {request.method} {request.full_path}")
+    return response
+
 
 @APP.teardown_request
 def remove_client(exc=None):
@@ -101,7 +115,20 @@ def remove_client(exc=None):
 def create_app(config_name:Literal['development', 'production', 'testing'] = 'production'):
     global APP
 
+    ###* Logger ###
+    from sys import stderr
+    config = {
+        "handlers": [
+            {"sink": stderr, "level": "DEBUG"},
+        ],
+    }
+    logger.configure(**config)
+    logger.add(
+        f"dgx_{config_name}.log", level="INFO", retention="5 days"
+    )
+
     ###* Configurations ###
+    logger.info(f"Start by {config_name}")
     APP.config.from_object(configs[config_name])
 
     ###* Sqlite ###

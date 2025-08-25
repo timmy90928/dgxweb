@@ -2,6 +2,7 @@
 # https://www.maxlist.xyz/2019/10/30/flask-sqlalchemy/
 #? strftime('%Y-%m-%d', timestamp, 'unixepoch','localtime')
 
+from loguru import logger
 from flask import Flask, current_app
 from utils.utils import timestamp as _timestamp, now_time
 from flask_sqlalchemy import SQLAlchemy as _SQLAlchemy, model
