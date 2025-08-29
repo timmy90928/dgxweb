@@ -14,23 +14,83 @@
 <div class="container">
 
     <!-- <form action="/account/edit/{{ current_user.id }}" method="post" enctype="multipart/form-data" class="needs-validation" novalidate> -->
-    <form action="/container/create" method="post">
+    <!-- <form  id="create-container-form" action="/container/create" method="post"> -->
+    <form  id="create-container-form">
         <label for="image" class="form-label">請選擇Image</label>
         <input type="text" id="image" name="image" list="imagelist" class="form-control" aria-describedby="ImageHelpBlock" required>
         <div id="ImageHelpBlock" class="form-text">
-           可參考 http://ngc.nvidia.com/catalog/containers
+以上下拉選單僅顯示已下載的 Image, 若沒有自己想要的可參考 http://ngc.nvidia.com/catalog/containers, 以下為範例:
+<br>
+nvcr.io/nvidia/pytorch:24.05-py3
+<br>
+nvcr.io/nvidia/tensorflow:24.05-tf2-py3
+<br>
+nvcr.io/partners/matlab:r2024a
+<br>
+nvcr.io/partners/matlab:r2019b
         </div>
         {{ lib.datalist("imagelist", images, 0) }}
         <div class="button-group">
             <div>
-                <input type='submit' value='創建' class="blue-button">
+                <input id="submit-btn" type='submit' value='創建' class="blue-button">
                 <input type='reset'  value='重設' class="red-button">
             </div>
         </div>
     </form>
+    <h4>進度：</h4>
+    <pre id="log-output" style="background-color: #222; color: #eee; padding: 15px; border-radius: 5px; height: 300px; overflow-y: scroll; white-space: pre-wrap;"></pre>
 </div>
 {% endblock %} 
 
 
 
-{% block bottom %} {% endblock %} 
+{% block bottom %} 
+    {{ super() }}
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            // 1. 連接到後端 Socket.IO 服務
+            const socket = io();
+            const logOutput = document.getElementById('log-output');
+            const form = document.getElementById('create-container-form');
+            const submitBtn = document.getElementById('submit-btn');
+
+            socket.on('connect', () => {
+                console.log('Successfully connected to server!');
+            });
+
+            // 2. 監聽來自後端的 'log_message' 事件
+            socket.on('create_container_by_image_log_message', (data) => {
+                // 將收到的日誌附加到文字區域
+                logOutput.textContent += data.log;
+                // 自動滾動到底部
+                logOutput.scrollTop = logOutput.scrollHeight;
+
+                // 如果收到完成或錯誤訊息，重新啟用按鈕
+                if (data.log.includes('Complete!') || data.log.includes('An error occurred')) {
+                    submitBtn.disabled = false;
+                    submitBtn.value = '創建';
+                }
+            });
+
+            // 3. 攔截表單提交
+            form.addEventListener('submit', (e) => {
+                e.preventDefault(); // 防止頁面刷新
+                console.log('Successfully connected to server!');
+                const imageName = document.getElementById('image').value;
+                if (!imageName) {
+                    alert('請輸入 Image 名稱');
+                    return;
+                }
+                
+                // 清空舊的日誌並禁用按鈕
+                logOutput.textContent = '';
+                submitBtn.disabled = true;
+                submitBtn.value = '創建中...';
+
+                // 4. 透過 Socket.IO 向後端發送 'start_pull' 事件
+                socket.emit('create_container_by_image', { image: imageName });
+            });
+        });
+    </script>
+{% endblock %}

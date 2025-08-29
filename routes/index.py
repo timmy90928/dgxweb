@@ -144,14 +144,6 @@ def register_token(token):
 
     return redirect(f"/alert/歡迎 {form['name']}, 已驗證成功?to=/login")
 
-@index_bp.route('/all_images')
-def all_images():
-    ai = Image().list()
-    heads = ai[0]
-    datas = ai[1:]
-
-    return render_template('common/list.html', title = 'All Images', heads = heads, datas = datas)
-
 @index_bp.route('/a')
 @jwt_required()
 def containers():

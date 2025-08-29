@@ -41,12 +41,11 @@ def container_create():
         Container.create(current_user.username, image_name)
 
         return redirect('/container/all')
-    images = [
-        ['nvcr.io/nvidia/pytorch:24.05-py3'],
-        ['nvcr.io/nvidia/tensorflow:24.05-tf2-py3'],
-        ['nvcr.io/partners/matlab:r2024a'],
-        ['nvcr.io/partners/matlab:r2019b']
+    
+    images = [ #? 只顯示已安裝的 Images
+        [f"{tags}"] for tags, created, size in  Image().list()[1:]
     ]
+
     return render_template('container_create.html', images = images)
 
 @container_bp.route('/stop/<container_id>')
@@ -96,7 +95,10 @@ def container_remove(container_id):
 
     container.remove()
     db.delete(container_db)
-
-    Path(f'/home/lab120/user_data/{current_user.username}').rmdir()
+    try:
+        Path(f'/home/lab120/user_data/{current_user.username}').rmdir()
+    except OSError as e:
+        logger.warning(e)
+    # Path(f'/home/lab120/nas/{current_user.username}').rmdir()
 
     return redirect('/container/all')

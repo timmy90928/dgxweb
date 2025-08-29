@@ -111,6 +111,8 @@ def remove_client(exc=None):
     for ip, timestamp in list(clients.items()):
         if time() - timestamp > 300:  # 5 minutes
             del clients[ip]
+###* SocketIO ###
+socketio = SocketIO(APP, cors_allowed_origins="*", async_mode='eventlet')
 
 def create_app(config_name:Literal['development', 'production', 'testing'] = 'production'):
     global APP
@@ -144,8 +146,5 @@ def create_app(config_name:Literal['development', 'production', 'testing'] = 'pr
     ###* Init Tools ###
     initJinjaFunc(APP)  # Jinja2
     initAdmin(APP)      # Admin View
-
-    ###* SocketIO ###
-    socketio = SocketIO(APP, cors_allowed_origins="*", async_mode='eventlet')
 
     return socketio
