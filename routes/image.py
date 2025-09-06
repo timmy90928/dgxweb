@@ -20,7 +20,7 @@ def all_images():
 @socketio.on('create_container_by_image')
 def handle_docker_pull(data):
     """
-    當收到前端 'start_pull' 事件時，此函數會被觸發
+    當收到前端 'create_container_by_image' 事件時，此函數會被觸發
     """
     client_sid = request.sid 
     image_to_pull = data.get('image')
