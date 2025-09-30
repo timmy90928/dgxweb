@@ -230,6 +230,7 @@ class Container:
             device_requests = [
                 DeviceRequest(count=-1, capabilities=[['gpu']]) #? --gpus all
             ],
+            shm_size='120g',
             detach = True
         )
 
