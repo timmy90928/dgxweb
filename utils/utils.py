@@ -264,9 +264,11 @@ class Email(SMTP):
 class login_required_role:
     role:int = None
     message:str = None
-    def __init__(self, role:int = -1, user_id_param:str = None):
+
+    def __init__(self, role:int = -1, check_key:str = None, check_fn:Callable[[Any], None] = None):
         self.role = role
-        self.user_id_param = user_id_param
+        self.check_key = check_key
+        self.check_fn = check_fn
         self.message = self._get_message(role)
 
     def __call__(self, func:Callable):
@@ -274,8 +276,9 @@ class login_required_role:
         def wrap(*args, **kwargs):
             if not current_user.is_authenticated:
                 return current_app.login_manager.unauthorized()
-            elif self.user_id_param:
-                self._check_user_id(kwargs[self.user_id_param])
+            elif self.check_key:
+                check_fn = self.check_fn or self._check_user_id
+                check_fn(kwargs[self.check_key])
                 return _login_required(func)(*args, **kwargs)
             elif current_user.rolenum > self.role:  
                 abort(403, response=self.message)

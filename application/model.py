@@ -2,6 +2,7 @@
 # https://www.maxlist.xyz/2019/10/30/flask-sqlalchemy/
 #? strftime('%Y-%m-%d', timestamp, 'unixepoch','localtime')
 
+from loguru import logger
 from flask import Flask, current_app
 from utils.utils import timestamp as _timestamp, now_time
 from flask_sqlalchemy import SQLAlchemy as _SQLAlchemy, model
@@ -168,6 +169,9 @@ class User(db.Model):
         self.name = name
         self.email = email
         self.role = role
+        
+    def password_(self, password):
+        self.password = hash(password)
 
     def check_password(self, password):
         """
@@ -227,3 +231,43 @@ class Setting(db.Model):
     def __init__(self, key, value):
         self.key = key
         self.value = value
+
+from alembic.config import Config as _AlembicConfig
+from alembic import command as _AlembicCommand
+from flask_migrate import Migrate
+from alembic.script import ScriptDirectory
+from sqlalchemy import create_engine
+from alembic.runtime.migration import MigrationContext
+def _has_pending_migrations(alembic_cfg: _AlembicConfig) -> bool:
+    script = ScriptDirectory.from_config(alembic_cfg)
+    engine = create_engine(alembic_cfg.get_main_option("sqlalchemy.url"))
+    with engine.connect() as connection:
+        context = MigrationContext.configure(connection)
+        current_rev = context.get_current_revision()
+        head_rev = script.get_current_head()
+        return current_rev != head_rev
+    
+def initDB(app: Flask, create_all: Union[bool, Literal["auto"]] = False):
+    """
+    初始化資料庫並自動偵測是否需要升級。
+
+    Args:
+        app: Flask 應用實例。
+        create_all: 是否強制執行 db.create_all()。
+    """
+    global db
+    db.init_app(app)
+    migrate = Migrate()
+    migrate.init_app(app, db)
+    with app.app_context():
+        alembic_cfg = _AlembicConfig("alembic.ini")
+        alembic_cfg.set_main_option("sqlalchemy.url", app.config['SQLALCHEMY_DATABASE_URI'])
+        alembic_cfg.set_main_option("script_location", "migrations")
+
+        if _has_pending_migrations(alembic_cfg):
+            logger.warning("Detected new migrations. Applying database upgrade...")
+            _AlembicCommand.upgrade(alembic_cfg, "head")
+            logger.info("Database upgrade complete.")
+
+        # 這裡可以保留您原本的設定，例如記錄啟動時間
+        Setting.set("START_TIME", now_time())

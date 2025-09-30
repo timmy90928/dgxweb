@@ -71,12 +71,16 @@ client.volumes.prune(): 清理所有未使用的資料卷。
 """
 
 # sudo python3 -m utils.dockers
-from  docker import from_env, errors
+from loguru import logger
+from flask import request
+from docker import from_env, errors
 from docker.models.containers import Container as _Container
 from docker.models.images import Image as _Image
 from docker.types import DeviceRequest
 from utils.utils import errorCallback, timestamp, format_bytes, get_local_ip
-from utils.model import db, Container as ContainerDB
+from application import socketio
+from application.model import db, Container as ContainerDB
+import subprocess
 client = from_env()
 
 @errorCallback("尋找containers失敗", 404)
@@ -169,35 +173,50 @@ class Container:
             except Exception as e:
                 image = f"ERROR: {e}"
 
+            if is_runing:
+                remove_confirm = f"Confirm('是否確定刪除 {container.name} , 請先停止container','/container/all')"
+                container_start_or_stop = f"<a href='/container/stop/{container.id}'>stop</a>"
+            else:
+                remove_confirm = f"Confirm('是否確定刪除 {container.name}','/container/remove/{container.id}')"
+                container_start_or_stop = f"<a href='/container/start/{container.id}'>start</a>"
+
             results.append(
                 [
-                    f"<a href={href}>{container.name}</a>" if with_control and is_runing else container.name,
+                    f"<a href='{href}' target='_blank'>{container.name}</a>" if with_control and is_runing else container.name,
                     user, image,
                     timestamp(iso = container.attrs['Created']),
                     timestamp(iso = container.attrs['State']['StartedAt'])if is_runing else '-',
                     container.status,
-                    f"<a href='/container/{'stop' if is_runing else 'start'}/{container.id}'>{'stop' if is_runing else 'start'}</a>" if with_control else '-',
-                    f"<a href='/container/remove/{container.id}'>Remove</a>" if with_control else '-',
+                    container_start_or_stop if with_control else '-',
+                    f"<a class='small-red-button' onclick=\"{remove_confirm}\")>Remove</a>" if with_control else '-',
                 ]
             )
         return results
 
     @classmethod
-    def create(cls, username:str, image_name:str):
+    def create(cls, image_name:str, user:dict, sid:str = None):
         """
         Args:
             image_name: ex: nvcr.io/nvidia/pytorch:24.05-py3
         """
-        from utils.g import current_user
+        logger.debug(f"user: {user}")
+        socketio.emit('create_container_by_image_log_message', {'log': f"create {image_name}..."}, room = sid)
+
         library, tag = image_name.split(':') if ':' in image_name else (image_name, 'latest')
         library_name = library.split('/')[-1]
-        container_name = f"{username}_{library_name}_{tag}"
+        container_name = f"{user['username']}_{library_name}_{tag}"
         volumes = {
-            f"/home/lab120/user_data/{username}": {"bind": f"/workspace/{username}", "mode": "rw"},
-            f"/raid/DataSet/{username}": {"bind": "/workspace/DataSet", "mode": "rw"},
-            "/raid/ShareDataSet": {"bind": "/workspace/Share", "mode": "rw"}
+            f"/home/lab120/user_data/{user['username']}": {"bind": f"/workspace", "mode": "rw"},
+            f"/home/lab120/nas/{user['username']}": {"bind": f"/workspace/nas", "mode": "rw"},
+            # f"/home/lab120/user_data/{username}": {"bind": f"/workspace/{username}", "mode": "rw"},
+            # f"/raid/DataSet/{username}": {"bind": "/workspace/DataSet", "mode": "rw"},
+            # "/raid/ShareDataSet": {"bind": "/workspace/Share", "mode": "rw"}
         }
 
+        ###* 先檢查 Image 是否存在 ###
+        Image.create(image_name, sid)
+
+        ###* 建立 Container ###
         _container = client.containers.create(
             image = image_name,
             command = "bash",
@@ -211,13 +230,19 @@ class Container:
             device_requests = [
                 DeviceRequest(count=-1, capabilities=[['gpu']]) #? --gpus all
             ],
+            shm_size='120g',
             detach = True
         )
-    
-        db.add(
-            ContainerDB(_container.id, _container.name, '', user_id = current_user.id)
-        )
 
+        ###* 寫入資料庫 ###
+        from application import APP
+        with APP.app_context():
+            db.add(
+                ContainerDB(_container.id, _container.name, '', user_id = user['id'])
+            )
+        
+        ###* 完成 ###
+        socketio.emit('create_container_by_image_log_message', {'log': "\nComplete!"}, room = sid)
         return _container
 
 class Image:
@@ -243,6 +268,80 @@ class Image:
             )
         return results
     
+    @classmethod
+    def create(cls, image_name:str, sid:str):
+        library, tag = image_name.split(':') if ':' in image_name else (image_name, 'latest')
+  
+        logger.debug(f"Download {library}, {tag}...")
+        socketio.emit('create_container_by_image_log_message', {'log': f"Pulling image: {library}:{tag}\n"}, room = sid)
+
+        # 使用 client.api.pull 才能取得串流輸出
+        response = client.api.pull(library, tag, stream=True, decode=True)
+        
+        for line in response:
+            status = line.get('status', '')
+            progress = line.get('progress', '')
+            log_output = ""
+
+            if progress:
+                log_output = f"{status}: {progress}\n"
+            else:
+                log_output = f"{status}\n"
+            
+            # 發送 'log_message' 事件給前端
+            socketio.emit('create_container_by_image_log_message', {'log': log_output}, room = sid)
+            # 讓出控制權，避免 eventlet 阻塞
+            socketio.sleep(0)
+
+        socketio.emit('create_container_by_image_log_message', {'log': "\nDownload complete!"}, room = sid)
+        logger.debug("Down")
+
+def get_gpu_usage():
+    # 獲取GPU進程
+    gpu_result = subprocess.run([
+        'nvidia-smi', '--query-compute-apps=pid,gpu_uuid', '--format=csv,noheader'
+    ], capture_output=True, text=True)
+
+    # 獲取GPU卡號映射
+    gpu_map_result = subprocess.run([
+        'nvidia-smi', '--query-gpu=index,uuid', '--format=csv,noheader'
+    ], capture_output=True, text=True)
+
+    # 建立UUID到卡號的映射
+    uuid_to_index = {}
+    for line in gpu_map_result.stdout.strip().split('\n'):
+        index, uuid = line.split(', ')
+        uuid_to_index[uuid] = index
+
+    # 建立PID到容器的映射
+    pid_to_container = {}
+    for container in client.containers.list():
+        top_result = container.top()
+        if top_result and 'Processes' in top_result:
+            for process in top_result['Processes']:
+                pid_to_container[int(process[1])] = container.name
+
+    # 匹配並顯示結果
+    result = {
+        'GPU 0': None,
+        'GPU 1': None,
+        'GPU 2': None,
+        'GPU 3': None,
+    }
+
+    for line in gpu_result.stdout.strip().split('\n'):
+        if line:
+            pid, gpu_uuid = line.split(', ')
+            pid = int(pid)
+            gpu_index = uuid_to_index.get(gpu_uuid, "?")
+
+            if pid in pid_to_container:
+                container_name = pid_to_container[pid]
+
+                container_db:ContainerDB = ContainerDB.query.filter_by(name = container_name).first()
+                result[f"GPU {gpu_index}"] = [container_db.name, f"{container_db.user.name}({container_db.user.username})"]
+    return result
+
 if __name__ == '__main__':
 
     print(Image().list())

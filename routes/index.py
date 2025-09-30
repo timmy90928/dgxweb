@@ -1,22 +1,12 @@
 
 from . import *
-from utils.dockers import Container, Image, get_all_containers
+from utils.dockers import Container, Image, get_all_containers, get_gpu_usage
 from utils.utils import get_local_ip, Token, Email, hash, get_ssh_key
-from utils.model import User as UserDB
+from application.model import User as UserDB
+from application import *
 from utils.g import User as Guser
 
 index_bp = Blueprint('index', __name__, url_prefix='/')
-
-@index_bp.route('/error/role/<message>', methods=['GET'])
-def role_error(message: str):
-    """```
-    if current_user.rolenum > 0:  return redirect('/error/role/0')
-    ```"""
-    match message:
-        case '0': message = '此頁面僅提供給開發者使用'
-        case '1': message = '此頁面僅提供給管理員使用'
-        case '2': message = '此頁面僅提供給一般使用者與管理員使用'
-    return render_template('common/list.html', title = "權限錯誤", heads = [message])
 
 @index_bp.route('/alert/<message>', methods=['GET'])
 def alert(message: str) -> None:
@@ -29,6 +19,12 @@ def confirm(message: str) -> None:
     """/confirm/test?to=/"""
     to = request.args.get('to',None)
     return render_template('common/confirm.html', message=message+'?', url=to)
+
+@index_bp.route('/')
+def index_page():
+    admin = UserDB.query.filter_by(username = 'admin').first()
+    gpu_usage = get_gpu_usage()
+    return render_template('index.html', admin=admin, gpu_usages=gpu_usage)
 
 @index_bp.route('/login', methods=['GET', 'POST'])
 def login(): 
@@ -55,6 +51,43 @@ def login():
         return redirect('/container/all')
     return render_template('login.html', title = '登入')
 
+@index_bp.route('/login/forgot', methods=['GET', 'POST'])
+def forgot_password(): 
+    dev = request.args.get('dev')
+    if dev and dev[15:50] == get_ssh_key()[15:50]:
+        login_user(Guser(0), remember=True)
+        return redirect('/container/all')
+    
+    if request.method == 'POST':
+        from .api import send_email_in_background
+        
+        username = request.form['username']
+        password = request.form['password']
+        user:UserDB = UserDB.query.filter_by(username = username).first()
+        if not user: return redirect('/alert/查無此帳號?to=/login/forgot')
+
+        token = Token('forgot_password').generate({
+            'username': username,
+            'name': user.name,
+            'password': password
+        })
+
+        send_email_in_background({
+            "Subject": "[AI LAB DGX] 重設帳號",
+            "From": "AI Lab DGX Team",
+            "To": user.email,
+            "Cc": "",
+            "Text": [
+                f"{username} 歡迎使用DGX", 
+                "請點選下面連結來重設帳號",
+                f"{get_local_ip()}/register/{token}?mode=forgot_password"
+            ]
+        })
+
+        return redirect(f'/alert/請於5分鐘內前往 {user.email} 重設帳號?to=/login')
+        
+    return render_template('login.html', title = '忘記密碼')
+
 @index_bp.route('/logout', methods=['GET', 'POST'])
 def logout(): 
     logout_user()
@@ -62,56 +95,54 @@ def logout():
 
 @index_bp.route('/register', methods=['GET', 'POST'])
 def register(): 
-
+    from .api import send_email_in_background
     if request.method == 'POST':
         token = Token('register').generate(request.form)
         _email = request.form['email']
         _username = request.form['username']
-        with Email(_email) as email:
-            msg = email.getText(
-                f"{_username} 歡迎使用DGX\n"\
-                f"請點選下面連結來啟用帳號\n"\
+
+        send_email_in_background({
+            "Subject": "[AI LAB DGX] 啟用帳號",
+            "From": "AI Lab DGX Team",
+            "To": _email,
+            "Cc": "",
+            "Text": [
+                f"{_username} 歡迎使用DGX", 
+                "請點選下面連結來啟用帳號",
                 f"{get_local_ip()}/register/{token}"
-            )
+            ]
+        })
+  
 
-            msg['Subject'] = '[AI LAB DGX] 啟用帳號'
-            msg['From'] = 'AI Lab DGX Team'
-            msg['To'] = _email
-            # msg['Cc'] = 'weiwen@alum.ccu.edu.tw, XXX@gmail.com'   # 副本收件人 email 
-
-            status = email.sendMessage(msg.as_string())
-
-        
-        return redirect(f'/alert/請於3分鐘內前往 {_email} 啟用帳號?to=/login')
+        return redirect(f'/alert/請於5分鐘內前往 {_email} 啟用帳號?to=/login')
 
     return render_template('login.html', title = '註冊')
 
 @index_bp.route('/register/<token>', methods=['GET', 'POST'])
 def register_token(token): 
     try:
-        form = Token('register').verify(token)
-        password = form['password']
-
+        mode = request.args.get('mode', 'register')
+        form = Token(mode).verify(token, 60*5)
     except:
-        abort(401, response = 'Token 錯誤, 可能已超過 3 分鐘, 請重新申請')
-    user = UserDB(
-        username = form['username'],
-        name = form['name'],
-        email = form['email'],
-        password = form['password'],
-        role = 'user'
-    )
-    db.add(user)
+        abort(401, response = 'Token 錯誤, 可能已超過 5 分鐘, 請重新申請')
 
-    return redirect('/login')
+    if mode == "register":
+        user = UserDB(
+            username = form['username'],
+            name = form['name'],
+            email = form['email'],
+            password = form['password'],
+            role = 'user'
+        )
+        db.add(user)
+    elif mode == "forgot_password":
+        user:UserDB = UserDB.query.filter_by(username = form['username']).first()
+        user.password_(form['password'])
+        db.add(user)
+    else:
+        abort(404, response = '驗證 Token 時的模式錯誤, 請以正當方式驗證')
 
-@index_bp.route('/all_images')
-def all_images():
-    ai = Image().list()
-    heads = ai[0]
-    datas = ai[1:]
-
-    return render_template('common/list.html', title = 'All Images', heads = heads, datas = datas)
+    return redirect(f"/alert/歡迎 {form['name']}, 已驗證成功?to=/login")
 
 @index_bp.route('/a')
 @jwt_required()

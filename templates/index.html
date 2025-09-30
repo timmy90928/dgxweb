@@ -1,10 +1,160 @@
-{% extends "common/base.html" %} {% block title %}DGX Container
-管理介面{%endblock %} {% block body %}
-<div class="header-section">
-  <button onclick="refresh()">🔄 重新整理</button>
-  <h3>Container Manager</h3>
-  <button onclick="restartAll()">🔁 restartall</button>
-</div>
+{% extends "common/base.html" %}
+{% block title %}DGX Container 控制面板{% endblock %}
 
-{{ lib.list(["Name", "Status", "Image", "SSH Port"], containers) }} {%
-endblock%}
+{% block body %}
+<!-- Custom White-Tech CSS -->
+<style>
+    body {
+        background-color: #f7f9fb;
+        font-family: 'Inter', 'Helvetica Neue', sans-serif;
+        color: #2b2f36;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #1a1d23;
+        border-left: 4px solid #2c9dd7;
+        padding-left: 1rem;
+    }
+
+    .card-white {
+        background-color: #fff;
+        border: 1px solid #e3e7ee;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        transition: 0.25s ease;
+    }
+
+    .card-white:hover {
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    .table thead {
+        background-color: #f0f3f8;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f9fbfd;
+    }
+
+    .badge-gpu {
+        background-color: #e0f7ff;
+        color: #0077b6;
+        font-weight: 500;
+        border-radius: 8px;
+        padding: 0.3em 0.6em;
+    }
+
+    .hint-list li::before {
+        content: '✔';
+        color: #3ac5e7;
+        font-weight: bold;
+        display: inline-block;
+        width: 1em;
+        margin-right: 0.5em;
+    }
+
+    .contact-box {
+        background-color: #eef3f9;
+        border-left: 4px solid #2c9dd7;
+        padding: 1.5rem;
+        border-radius: 8px;
+    }
+
+    .small-note {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+</style>
+
+<div class="container">
+    <!-- Top Summary Area -->
+    <div class="card-white mb-5">
+        <h1 class="fw-bold mb-2">DGX Container 控制面板</h1>
+        <p class="small-note">這是一個簡潔直覺的資源監控介面，請依照規範操作。</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left Column: Container Status -->
+        <div class="col-lg-8">
+            <div class="card-white">
+                <div class="section-title">目前 Container 使用狀況</div>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                {% for head in ['GPU Index', 'Container Name', 'User Name'] %}
+                                <th scope="col">{{ head }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for gpu_usage, user in gpu_usages.items() %}
+                            <tr>
+                                <td><span class="badge-gpu">{{ gpu_usage }}</span></td>
+                                <td>{{ user[0] }}</td>
+                                <td>{{ user[1] }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-4">目前無使用中的 Container。</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Info -->
+        <div class="col-lg-4">
+            <div class="card-white mb-4">
+                <div class="section-title">快速上手</div>
+                <ol class="ps-3">
+                    <li>註冊帳號</li>
+                    <li>驗證電子郵件</li>
+                    <li>登入後建立並管理 Container</li>
+                    <li>
+使用前請先使用以下python code 指定 gpu
+<br>
+import os
+<br>
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+</li>
+<li>
+可以在windows下, 使用下列指令連線到 dgx 的 nas
+<br>
+net use X: \\140.123.106.247\dgx /user:dgx_user Ailab120 /persistent:yes
+</li>
+                </ol>
+            </div>
+
+            <div class="card-white">
+                <div class="section-title">使用須知</div>
+                <ul class="hint-list ps-2">
+                    <li>個人資料請放在 `/workspace/{自己的使用者名稱}`, /workspace 為 Jupyter Lab 的 根目錄</li>
+                    <li>每人最多可使用 3 個 Container</li>
+                    <li>使用時啟動，閒置請停止</li>
+                    <li>畢業後請自行清除資源, 若有交接給學弟妹, 要請學弟妹在使用完後自行清除資源</li>
+                    <li>為了安全，清除資源時，請先停止 Container</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Contact -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="contact-box">
+                <h5 class="fw-semibold"><i class="bi bi-person-fill me-2"></i>聯繫管理員</h5>
+                <p class="mb-1">如需協助，請聯絡：</p>
+                <strong>{{ admin.name }}</strong><br>
+                <a href="mailto:{{ admin.email }}">{{ admin.email }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
