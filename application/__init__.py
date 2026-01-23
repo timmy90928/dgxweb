@@ -22,6 +22,12 @@ import requests
 from threading import Thread
 from time import sleep
 
+def get_remote_addr():
+    # If behind a proxy, you might need request.headers.get('X-Forwarded-For')
+    return request.headers.getlist(
+        "X-Forwarded-For")[0].split(',')[0].strip(
+    ) if request.headers.getlist("X-Forwarded-For") else request.remote_addr
+
 ###* utils ###
 from loguru import logger
 from os import urandom
@@ -74,7 +80,7 @@ from werkzeug.exceptions import HTTPException
 def all_error_handler(e:HTTPException):
     from utils.g import current_user
     user = f"{current_user.name}<{current_user.username}>" if current_user.is_authenticated else "未登入"
-    ip = request.remote_addr
+    ip = get_remote_addr()
     logger.exception(f"[{ip}({user})] {e}")
     page = [
         ['HTTP狀態碼', e.code],
@@ -91,14 +97,14 @@ from time import time
 @APP.before_request
 def track_connection() -> None:
     """Tracks all the current clients (by IP) and stores them in the set clients."""
-    ip = request.remote_addr
+    ip = get_remote_addr()
     clients[ip] = time()
 
 from flask import Response
 @APP.after_request
 def log_request(response:Response) -> None:
     from utils.g import current_user
-    ip = request.remote_addr
+    ip = get_remote_addr()
     if not (300 <= response.status_code < 400):
         user = f"{current_user.name}<{current_user.username}>" if current_user.is_authenticated else "未登入"
         logger.info(f"[{ip}({user})] {request.method} {request.full_path}")
