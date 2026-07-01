@@ -159,7 +159,7 @@ Synology NAS 啟用 NFS
     | NFS 權限 | 主機名稱或 IP 位址 | 主機IP位址 |
     | NFS 權限 | 權限 | 自訂 |
     | NFS 權限 | 安全 | sys_all |
-    | NFS 權限 | Squash | 將所有使用者調整為 guest |
+    | NFS 權限 | Squash | 不調整 |
     | NFS 權限 | 非同步 | 勾選 |
 
 
