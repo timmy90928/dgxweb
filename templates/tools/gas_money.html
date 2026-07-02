@@ -1,0 +1,155 @@
+{% extends "common/base.html" %} 
+{% block title %}油錢分攤小工具{% endblock %} 
+
+{%block head %} 
+{{ super() }}
+<style>
+    /* 優化後的 container 樣式 */
+    .cost-splitter-container {
+        display: flex; /* 啟用 Flexbox */
+        flex-direction: column; /* 垂直排列 */
+        justify-content: center; /* 垂直置中 (主軸) */
+        align-items: center; /* 水平置中 (交錯軸) */
+        min-height: calc(100vh - 56px - 40px); /* 扣除導覽列和頁腳高度 (依你的 base.html 調整) */
+        padding: 1rem; /* 在手機上增加一點邊距 */
+        margin: 0 auto;
+    }
+    
+    .cost-splitter-form-wrapper {
+        max-width: 600px; /* 在大螢幕上限制最大寬度 */
+        width: 100%; /* 佔滿可用寬度 */
+    }
+
+    /* 以下是你的原始樣式，稍作整理 */
+    form { 
+        background: #fff; 
+        border: 1px solid #ddd; 
+        padding: 20px; 
+        border-radius: 8px; 
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+    }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+    /* 讓 input 寬度為 100% (減去 padding) */
+    .form-group input[type="number"], 
+    .form-group input[type="text"] { 
+        width: 100%; 
+        padding: 10px; 
+        border: 1px solid #ccc; 
+        border-radius: 4px; 
+        box-sizing: border-box; /* 關鍵：讓 padding 不會撐爆寬度 */
+    }
+    .form-group-checkbox { display: flex; align-items: center; }
+    .form-group-checkbox input { margin-right: 10px; }
+    button { 
+        background-color: #007bff; 
+        color: white; 
+        padding: 10px 15px; 
+        border: none; 
+        border-radius: 4px; 
+        cursor: pointer; 
+        font-size: 16px; 
+        width: 100%; /* 讓按鈕滿寬 */
+    }
+    button:hover { background-color: #0056b3; }
+    .results { 
+        margin-top: 20px; 
+        background: #e6f7ff; 
+        border: 1px solid #b3e0ff; 
+        padding: 15px; 
+        border-radius: 8px; 
+    }
+    .results h2 { margin-top: 0; color: #0056b3; }
+    .results p { font-size: 1.1em; }
+    .results strong { font-size: 1.3em; color: #d9534f; }
+    .flash-error { 
+        color: red; 
+        background: #ffebeb; 
+        padding: 10px; 
+        border: 1px solid red; 
+        border-radius: 4px; 
+        margin-bottom: 15px;
+    }
+    
+</style>
+{% endblock %} 
+
+{%block body %} 
+<div class="cost-splitter-container">
+
+    <div class="cost-splitter-form-wrapper">
+
+        <div class="header-section">
+            <div></div>
+            <h3>油錢分攤小工具</h3>
+            <div></div>
+        </div>
+
+        <p>輸入里程、油耗等資訊，自動估算並分攤旅程總花費。</p>
+
+        {% with messages = get_flashed_messages(category_filter=['error']) %}
+            {% if messages %}
+                {% for message in messages %}
+                <div class="flash-error">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="">
+            <div class="form-group">
+                <label for="distance_km">1. 總里程 (公里)</label>
+                <input type="number" id="distance_km" name="distance_km" step="0.1" min="0" value="{{ request.form.distance_km or 0 }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="fuel_efficiency_kpl">2. 車輛油耗 (km/L)</label>
+                <input type="number" id="fuel_efficiency_kpl" name="fuel_efficiency_kpl" step="0.1" min="1" value="{{ request.form.fuel_efficiency_kpl or 15.0 }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="price_per_liter">3. 每公升油價 (元)</label>
+                <input type="number" id="price_per_liter" name="price_per_liter" step="0.01" min="0" value="{{ request.form.price_per_liter or live_gas_price or 31.0 }}" required>
+            </div>
+
+            <hr>
+            
+            <div class="form-group">
+                <label for="toll_fee">4. 總過路費 (元)</label>
+                <input type="number" id="toll_fee" name="toll_fee" step="0.01" min="0" value="{{ request.form.toll_fee or 0 }}">
+            </div>
+
+            <div class="form-group">
+                <label for="parking_fee">5. 總停車費 (元)</label>
+                <input type="number" id="parking_fee" name="parking_fee" step="0.01" min="0" value="{{ request.form.parking_fee or 0 }}">
+            </div>
+            
+            <hr>
+
+            <div class="form-group">
+                <label for="total_people">6. 車上總人數 (包含司機)</label>
+                <input type="number" id="total_people" name="total_people" min="1" value="{{ request.form.total_people or 2 }}" required>
+            </div>
+            
+            <div class="form-group-checkbox">
+                <input type="checkbox" id="driver_pays" name="driver_pays" {% if request.form.driver_pays %}checked{% endif %}>
+                <label for="driver_pays">司機也要一起分攤 (預設為司機免費)</label>
+            </div>
+            
+            <button type="submit">計算</button>
+        </form>
+
+        {% if results %}
+        <div class="results">
+            <h2>計算結果</h2>
+            <p>預估油錢： {{ results.calculated_fuel_cost | round(0) | int }} 元</p>
+            <p>旅程總花費 (油錢 + 過路費 + 停車費)： {{ results.total_cost | round(0) | int }} 元</p>
+            <p>{{ results.message }}</p>
+            <hr>
+            <p>
+                每位分攤者應支付： 
+                <strong>{{ results.cost_per_person | round(0) | int }} 元</strong>
+            </p>
+        </div>
+        {% endif %}
+    
+    </div> </div> {% endblock %}

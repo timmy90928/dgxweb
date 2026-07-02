@@ -87,7 +87,7 @@ def sendemail():
         text = json['Text']
         text =  text if len(text) == 0 else "\n".join(text)
         msg = email.getText(
-            f"{text}\n\nAILAB DGX TEAM" if request.remote_addr == '127.0.0.1' else f"{text}\n\n此訊息由 {request.remote_addr} 使用 AILAB DGX API 發出"
+            f"{text}\n\nAILAB DGX TEAM" if request.remote_addr == '127.0.0.1' else f"{text}\n\n此訊息由 {get_remote_addr()} 使用 AILAB DGX API 發出"
         )
 
         msg['Subject'] = json.get('Subject', '')

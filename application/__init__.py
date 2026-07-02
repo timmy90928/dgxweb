@@ -17,6 +17,7 @@ from flask import jsonify
 from flask import Response
 from flask import current_app
 from flask import g
+from flask import flash
 from flask_socketio import SocketIO, emit
 import requests
 from threading import Thread

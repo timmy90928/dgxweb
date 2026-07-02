@@ -12,7 +12,8 @@ from .container import container_bp
 from .image import image_bp
 from .api import api_bp
 from .server import server_bp
+from .tools import tools_bp
 from .chat import chat_bp
 
-ALL_BP = [index_bp, api_bp, server_bp, container_bp, image_bp, chat_bp]
+ALL_BP = [index_bp, api_bp, server_bp, container_bp, image_bp, tools_bp, chat_bp]
 

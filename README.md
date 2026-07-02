@@ -144,7 +144,22 @@ DGX NAS
 硬體安裝指南：
 [Synology RackStation RS3617xs+](https://global.download.synology.com/download/Document/Hardware/HIG/RackStation/17-year/RS3617xs+/cht/Syno_HIG_RS3617xs_Plus_cht.pdf)
 
-連線至 [AILAB-DGX-NAS](http://quickconnect.to/ailabdgx)
+連線至 [AILAB-DGX-NAS](https://dgx.synology.me/)
+
+
+一鍵對應網路磁碟機
+-----------------
+在自己的電腦執行以下指令，即可自動對應/掛載 NAS 的網路磁碟機（僅限 AILAB IP）。
+
+#### Windows
+```cmd
+curl -fsSL https://dgx.ailab120.synology.me/tools/lab_NAS.cmd -o lab_NAS.cmd && lab_NAS.cmd && del lab_NAS.cmd
+```
+
+#### Linux / macOS
+```bash
+curl -fsSL https://dgx.ailab120.synology.me/tools/lab_NAS.sh -o lab_NAS.sh && bash lab_NAS.sh && rm lab_NAS.sh
+```
 
 
 Synology NAS 啟用 NFS
